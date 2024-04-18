@@ -31,6 +31,10 @@ namespace Antmicro.Renode.Peripherals.Sensors
             commands.RegisterCommand(ReadElectronicId1stByte, 0xFA, 0xF);
             commands.RegisterCommand(ResetOutputBuffer, 0xFE);
             commands.RegisterCommand(ReadElectronicId2ndByte, 0xFC, 0xC9);
+            commands.RegisterCommand(WriteUserRegister, 0xE6);
+            commands.RegisterCommand(ReadUserRegister, 0xE7);
+            commands.RegisterCommand(WriteHeaterControlRegister, 0x51);
+            commands.RegisterCommand(ReadHeaterControlRegister, 0x11);
 
             Reset();
         }
@@ -62,6 +66,8 @@ namespace Antmicro.Renode.Peripherals.Sensors
         {
             Temperature = 0;
             Humidity = 0;
+            userReg = 0x3A;
+            heater = 0;
             outputBuffer.Clear();
         }
 
@@ -142,8 +148,41 @@ namespace Antmicro.Renode.Peripherals.Sensors
             outputBuffer.Clear();
         }
 
+        private void WriteUserRegister(byte[] data)
+        {
+            foreach(var value in data.Skip(1))
+            {
+                userReg = value;
+            }
+        }
+
+        private void ReadUserRegister(byte[] command)
+        {
+            outputBuffer.Enqueue((byte)(userReg & 0xFF));
+        }
+
+        private void WriteHeaterControlRegister(byte[] data)
+        {
+            foreach(var value in data.Skip(1))
+            {
+               heater = value;
+            }
+        }
+
+        private void ReadHeaterControlRegister(byte[] command)
+        {
+            outputBuffer.Enqueue((byte)(heater & 0xFF));
+        }
+
+        private bool IsHeaterEnabled()
+        {
+            return (userReg & 0x04) > 0;
+        }
+
         private decimal humidity;
         private decimal temperature;
+        private decimal heater;
+        private decimal userReg;
 
         private readonly Model model;
         private readonly I2CCommandManager<Action<byte[]>> commands;
