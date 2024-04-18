@@ -159,7 +159,7 @@ namespace Antmicro.Renode.Peripherals.Sensors
 
         private void ReadUserRegister(byte[] command)
         {
-            outputBuffer.Enqueue((byte)(userReg & 0xFF));
+            outputBuffer.Enqueue((byte)((uint)userReg & 0xFF));
         }
 
         private void WriteHeaterControlRegister(byte[] data)
@@ -174,19 +174,19 @@ namespace Antmicro.Renode.Peripherals.Sensors
 
         private void ReadHeaterControlRegister(byte[] command)
         {
-            outputBuffer.Enqueue((byte)(heater & 0xFF));
+            outputBuffer.Enqueue((byte)((uint)heater & 0xFF));
         }
 
         private bool IsHeaterEnabled()
         {
-            return (userReg & 0x04) > 0;
+            return ((uint)userReg & 0x04) > 0;
         }
 
-        private void TempHumidUpdate(int heater_update)
+        private void TempHumidUpdate(decimal heater_update)
         {
             if (IsHeaterEnabled()) {
                 Temperature += heater_update * 3;
-                Humidity -= heater_update * 4.5;
+                Humidity -= heater_update * 4.5m;
             }
         }
 
