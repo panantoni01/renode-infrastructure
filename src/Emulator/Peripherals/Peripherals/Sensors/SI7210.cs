@@ -52,6 +52,10 @@ namespace Antmicro.Renode.Peripherals.Sensors
         {
             if(!registerAddress.HasValue)
             {
+                /* Wake up from sleep. In this case the Si7210 will produce 0xFF */
+                if (count == 1)
+                    return new byte[] { 0xFF };
+
                 this.Log(LogLevel.Warning, "Trying to read without setting address");
                 return new byte[] { 0 };
             }
