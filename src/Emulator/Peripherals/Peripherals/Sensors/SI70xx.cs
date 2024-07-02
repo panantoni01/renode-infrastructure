@@ -31,6 +31,10 @@ namespace Antmicro.Renode.Peripherals.Sensors
             commands.RegisterCommand(ReadElectronicId1stByte, 0xFA, 0xF);
             commands.RegisterCommand(ResetOutputBuffer, 0xFE);
             commands.RegisterCommand(ReadElectronicId2ndByte, 0xFC, 0xC9);
+            commands.RegisterCommand(WriteUserRegister, 0xE6);
+            commands.RegisterCommand(ReadUserRegister, 0xE7);
+            commands.RegisterCommand(WriteHeaterControlRegister, 0x51);
+            commands.RegisterCommand(ReadHeaterControlRegister, 0x11);
 
             Reset();
         }
@@ -61,7 +65,9 @@ namespace Antmicro.Renode.Peripherals.Sensors
         public void Reset()
         {
             Temperature = 0;
-            Humidity = 0;
+            Humidity = 80;
+            userReg = 0x3A;
+            heater = 0;
             outputBuffer.Clear();
         }
 
@@ -142,8 +148,57 @@ namespace Antmicro.Renode.Peripherals.Sensors
             outputBuffer.Clear();
         }
 
+        private void WriteUserRegister(byte[] data)
+        {
+            bool wasHeaterEnabled = IsHeaterEnabled();
+            foreach(var value in data.Skip(1))
+            {
+                userReg = value;
+            }
+            bool isHeaterEnabled = IsHeaterEnabled();
+
+            if (!wasHeaterEnabled && isHeaterEnabled)
+                TempHumidUpdate(heater);
+            if (wasHeaterEnabled && !isHeaterEnabled)
+                TempHumidUpdate(-heater);
+        }
+
+        private void ReadUserRegister(byte[] command)
+        {
+            outputBuffer.Enqueue((byte)((uint)userReg & 0xFF));
+        }
+
+        private void WriteHeaterControlRegister(byte[] data)
+        {
+            var prev_heater = heater;
+            foreach(var value in data.Skip(1))
+            {
+               heater = value;
+            }
+            if (IsHeaterEnabled())
+                TempHumidUpdate(heater - prev_heater);
+        }
+
+        private void ReadHeaterControlRegister(byte[] command)
+        {
+            outputBuffer.Enqueue((byte)((uint)heater & 0xFF));
+        }
+
+        private bool IsHeaterEnabled()
+        {
+            return ((uint)userReg & 0x04) > 0;
+        }
+
+        private void TempHumidUpdate(decimal heater_update)
+        {
+            Temperature += heater_update * 3;
+            Humidity -= heater_update * 4.5m;
+        }
+
         private decimal humidity;
         private decimal temperature;
+        private decimal heater;
+        private decimal userReg;
 
         private readonly Model model;
         private readonly I2CCommandManager<Action<byte[]>> commands;
