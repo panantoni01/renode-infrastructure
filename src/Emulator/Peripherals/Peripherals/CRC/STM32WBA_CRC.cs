@@ -7,9 +7,9 @@
 
 namespace Antmicro.Renode.Peripherals.CRC
 {
-    public class STM32F0_CRC : STM32_CRCBase
+    public class STM32WBA_CRC : STM32_CRCBase
     {
-        public STM32F0_CRC(bool configurablePoly) : base(configurablePoly, IndependentDataWidth.Bits8)
+        public STM32WBA_CRC() : base(true, IndependentDataWidth.Bits32)
         {
         }
     }
