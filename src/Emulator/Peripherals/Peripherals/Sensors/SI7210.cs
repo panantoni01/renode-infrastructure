@@ -140,6 +140,16 @@ namespace Antmicro.Renode.Peripherals.Sensors
                 .WithReservedBits(1, 7)
             ;
 
+            Registers.Threshold.Define(this)
+                .WithValueField(0, 7, out threshold, name: "SW_OP")
+                .WithTaggedFlag("low4field", 7)
+            ;
+
+            Registers.Hysteresis.Define(this)
+                .WithValueField(0, 6, out hysteresis, name: "SW_HYST")
+                .WithValueField(6, 2, out fieldpolsel, name: "SW_FIELDPOLSEL")
+            ;
+
             Registers.OTPAddress.Define(this)
                 .WithValueField(0, 8, name: "OTP_Addr",
                     writeCallback: (_, value) => otpData = HandleOTP_ReadRequest((byte)value))
@@ -202,6 +212,9 @@ namespace Antmicro.Renode.Peripherals.Sensors
         private IFlagRegisterField otpReadEnable;
         private IFlagRegisterField autoIncrement;
         private IValueRegisterField enableTemperatureReadout;
+        private IValueRegisterField threshold;
+        private IValueRegisterField fieldpolsel;
+        private IValueRegisterField hysteresis;
         private byte temperatureOffset;
         private byte temperatureGain;
 
@@ -224,6 +237,8 @@ namespace Antmicro.Renode.Peripherals.Sensors
             EnableTemperatureReadout = 0xC3,
             PowerControl = 0xC4,
             AutoIncrement = 0xC5,
+            Threshold = 0xC6,
+            Hysteresis = 0xC7,
             OTPAddress = 0xE1,
             OTPData = 0xE2,
             OTPControl = 0xE3,
